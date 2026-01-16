@@ -1,0 +1,241 @@
+- id: XSS_SCRIPT
+  category: XSS
+  description: "script tag"
+  target: query
+  pattern: "(?i)<\\s*script"
+  ignore_case: true
+  weight: 5
+
+- id: XSS_SCRIPT_ENCODED
+  category: XSS
+  description: "script encoded"
+  target: query
+  pattern: "(?i)(%3c|%253c)\\s*script"
+  ignore_case: true
+  weight: 5
+
+- id: XSS_JAVASCRIPT
+  category: XSS
+  description: "javascript:"
+  target: query
+  pattern: "(?i)javascript\\s*:"
+  ignore_case: true
+  weight: 5
+
+- id: XSS_EVENT
+  category: XSS
+  description: "event handler"
+  target: query
+  pattern: "(?i)\\bon(error|load|click|mouse|focus|blur|key|change|submit|reset|select|input)\\s*="
+  ignore_case: true
+  weight: 5
+
+- id: XSS_IMG_SVG
+  category: XSS
+  description: "img/svg/iframe"
+  target: query
+  pattern: "(?i)<\\s*(img|svg|iframe|embed|object|video|audio|source|body|div|span|a|input|button|form|style|link|meta|base)"
+  ignore_case: true
+  weight: 4
+
+- id: XSS_ALERT
+  category: XSS
+  description: "alert/prompt/confirm"
+  target: query
+  pattern: "(?i)(alert|prompt|confirm|eval|setTimeout|setInterval)\\s*\\("
+  ignore_case: true
+  weight: 5
+
+- id: XSS_DOCUMENT
+  category: XSS
+  description: "document access"
+  target: query
+  pattern: "(?i)document\\s*\\."
+  ignore_case: true
+  weight: 4
+
+- id: XSS_WINDOW
+  category: XSS
+  description: "window access"
+  target: query
+  pattern: "(?i)window\\s*\\."
+  ignore_case: true
+  weight: 4
+
+- id: SQL_OR
+  category: SQLI
+  description: "or injection"
+  target: query
+  pattern: "(?i)'\\s*(or|and)\\s*'|\\bor\\b.*=.*|\\band\\b.*="
+  ignore_case: true
+  weight: 5
+
+- id: SQL_UNION
+  category: SQLI
+  description: "union select"
+  target: query
+  pattern: "(?i)union.*select"
+  ignore_case: true
+  weight: 5
+
+- id: SQL_COMMENT
+  category: SQLI
+  description: "sql comment"
+  target: query
+  pattern: "(--|#|/\\*)"
+  ignore_case: true
+  weight: 4
+
+- id: SQL_TAUTOLOGY
+  category: SQLI
+  description: "1=1 tautology"
+  target: query
+  pattern: "(?i)(\\d+)\\s*=\\s*\\1|'\\s*=\\s*'"
+  ignore_case: true
+  weight: 5
+
+- id: SQL_DROP
+  category: SQLI
+  description: "drop/delete/truncate"
+  target: query
+  pattern: "(?i)(drop|delete|truncate|insert|update)\\s+(table|from|into|database)"
+  ignore_case: true
+  weight: 5
+
+- id: SQL_SELECT
+  category: SQLI
+  description: "select from"
+  target: query
+  pattern: "(?i)select.*from"
+  ignore_case: true
+  weight: 4
+
+- id: SQL_SLEEP
+  category: SQLI
+  description: "sleep/benchmark"
+  target: query
+  pattern: "(?i)(sleep|benchmark|waitfor|delay)\\s*\\("
+  ignore_case: true
+  weight: 5
+
+- id: TRAV_DOTDOT
+  category: TRAVERSAL
+  description: "../"
+  target: query
+  pattern: "\\.\\."
+  ignore_case: true
+  weight: 5
+
+- id: TRAV_DOTDOT_PATH
+  category: TRAVERSAL
+  description: "../ in path"
+  target: path
+  pattern: "\\.\\."
+  ignore_case: true
+  weight: 5
+
+- id: TRAV_ETC
+  category: TRAVERSAL
+  description: "etc access"
+  target: query
+  pattern: "(?i)/etc/|etc/passwd|etc/shadow"
+  ignore_case: true
+  weight: 5
+
+- id: TRAV_WIN
+  category: TRAVERSAL
+  description: "windows paths"
+  target: query
+  pattern: "(?i)(boot\\.ini|win\\.ini|system32|windows/system)"
+  ignore_case: true
+  weight: 5
+
+- id: CMD_INJECTION
+  category: CMD
+  description: "command injection"
+  target: query
+  pattern: "(?i)(;|\\||\\$\\(|`|\\bexec\\b|\\bsystem\\b|\\bpassthru\\b|\\bshell_exec\\b)"
+  ignore_case: true
+  weight: 5
+
+- id: CMD_PIPE
+  category: CMD
+  description: "pipe/redirect"
+  target: query
+  pattern: "(?i)(\\|\\||&&|>>|<<|>|<)"
+  ignore_case: true
+  weight: 4
+
+- id: CMD_BACKTICK
+  category: CMD
+  description: "backtick execution"
+  target: query
+  pattern: "`[^`]+`"
+  ignore_case: true
+  weight: 5
+
+- id: CMD_SHELL_CMDS
+  category: CMD
+  description: "shell commands"
+  target: query
+  pattern: "(?i)\\b(cat|ls|pwd|whoami|id|uname|curl|wget|nc|netcat|bash|sh|zsh|python|perl|ruby|php)\\b"
+  ignore_case: true
+  weight: 4
+
+- id: PYTHON_IMPORT
+  category: CMD
+  description: "python import"
+  target: query
+  pattern: "(?i)__import__|import\\s+os|import\\s+subprocess"
+  ignore_case: true
+  weight: 5
+
+# === SSRF rules ===
+
+- id: SSRF_LOCALHOST
+  category: SSRF
+  description: "localhost access"
+  target: query
+  pattern: "(?i)(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\]|::1)"
+  ignore_case: true
+  weight: 5
+
+- id: SSRF_INTERNAL_IP
+  category: SSRF
+  description: "internal IP ranges"
+  target: query
+  pattern: "(?i)(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2\\d|3[01])\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3})"
+  ignore_case: true
+  weight: 5
+
+- id: SSRF_METADATA
+  category: SSRF
+  description: "cloud metadata endpoints"
+  target: query
+  pattern: "(?i)(169\\.254\\.169\\.254|metadata\\.google|metadata\\.azure|instance-data)"
+  ignore_case: true
+  weight: 6
+
+- id: SSRF_FILE_PROTO
+  category: SSRF
+  description: "file protocol"
+  target: query
+  pattern: "(?i)file://"
+  ignore_case: true
+  weight: 5
+
+- id: SSRF_GOPHER
+  category: SSRF
+  description: "gopher/dict protocol"
+  target: query
+  pattern: "(?i)(gopher|dict|ftp|ldap)://"
+  ignore_case: true
+  weight: 5
+
+- id: SSRF_URL_PARAM
+  category: SSRF
+  description: "url parameter with http"
+  target: query
+  pattern: "(?i)(url|uri|path|dest|redirect|site|link|domain|proxy|callback)=https?://"
+  ignore_case: true
+  weight: 4

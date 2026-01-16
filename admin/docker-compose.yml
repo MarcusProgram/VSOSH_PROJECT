@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  demo_upstream:
+    build:
+      context: .
+      dockerfile: demo_upstream/Dockerfile
+    environment:
+      - INSECURE_DEMO=${INSECURE_DEMO:-1}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - waf_net
+
+  ai_analyzer:
+    build:
+      context: .
+      dockerfile: ai_analyzer/Dockerfile
+    volumes:
+      - ./data/ml_artifacts:/data/ml_artifacts
+    environment:
+      - MODEL_PATH=/data/ml_artifacts/model.joblib
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - waf_net
+
+  telegram_backend:
+    build:
+      context: .
+      dockerfile: telegram_backend/Dockerfile
+    environment:
+      - CONTROL_PLANE_HMAC_SECRET=${CONTROL_PLANE_HMAC_SECRET}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WAF_LICENSE_KEY_HASH=${WAF_LICENSE_KEY_HASH:-}
+    volumes:
+      - ./data/telegram_db:/data
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - waf_net
+
+  waf_gateway:
+    build:
+      context: .
+      dockerfile: waf_gateway/Dockerfile
+    environment:
+      - UPSTREAM_URL=${UPSTREAM_URL:-http://demo_upstream:8001}
+      - AI_URL=${AI_URL:-http://ai_analyzer:8002/analyze}
+      - TELEGRAM_BACKEND_URL=${TELEGRAM_BACKEND_URL:-http://telegram_backend:8090}
+      - CONTROL_PLANE_HMAC_SECRET=${CONTROL_PLANE_HMAC_SECRET}
+      - LICENSE_KEY_HASH=${WAF_LICENSE_KEY_HASH:-}
+    volumes:
+      - ./data/logs:/data/logs
+    depends_on:
+      demo_upstream:
+        condition: service_healthy
+      ai_analyzer:
+        condition: service_started
+      telegram_backend:
+        condition: service_started
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - waf_net
+
+networks:
+  waf_net:
+    driver: bridge

@@ -1,0 +1,5 @@
+print("Команды:")
+print(" make up/down/logs")
+print(" make gen-license")
+print(" make verify-logs")
+print(" Трафик через WAF: http://localhost:8080")

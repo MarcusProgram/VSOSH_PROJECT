@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>WAF Test Stand</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    .warn { background: #e74c3c; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 20px; }
+    .section { background: #16213e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    h1 { color: #00d9ff; }
+    h2 { color: #ff6b6b; margin-top: 0; }
+    a { color: #4ecdc4; }
+    code { background: #0f3460; padding: 2px 6px; border-radius: 3px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 8px 0; padding: 8px; background: #0f3460; border-radius: 4px; }
+    .cat { display: inline-block; width: 80px; font-weight: bold; }
+    .xss { color: #ff6b6b; }
+    .sqli { color: #ffd93d; }
+    .trav { color: #6bcb77; }
+  </style>
+</head>
+<body>
+  <h1>WAF Test Stand</h1>
+
+  <div class="section">
+    <h2>XSS Attacks</h2>
+    <ul>
+      <li><span class="cat xss">basic</span> <a href="/search?q=<script>alert(1)</script>">/search?q=&lt;script&gt;alert(1)&lt;/script&gt;</a></li>
+      <li><span class="cat xss">img</span> <a href="/echo?msg=<img src=x onerror=alert(1)>">/echo?msg=&lt;img src=x onerror=alert(1)&gt;</a></li>
+      <li><span class="cat xss">svg</span> <a href="/profile?name=<svg onload=alert(1)>">/profile?name=&lt;svg onload=alert(1)&gt;</a></li>
+      <li><span class="cat xss">event</span> <a href="/comment?text=<div onmouseover=alert(1)>hover</div>">/comment?text=&lt;div onmouseover=alert(1)&gt;</a></li>
+      <li><span class="cat xss">href</span> <a href="/redirect?url=javascript:alert(1)">/redirect?url=javascript:alert(1)</a></li>
+      <li><span class="cat xss">encoded</span> <a href="/search?q=%3Cscript%3Ealert(1)%3C/script%3E">/search?q=%3Cscript%3Ealert(1)%3C/script%3E</a></li>
+      <li><span class="cat xss">double</span> <a href="/echo?msg=%253Cscript%253Ealert(1)">/echo?msg=%253Cscript%253E (double encoded)</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>SQL Injection</h2>
+    <ul>
+      <li><span class="cat sqli">or 1=1</span> <a href="/api/items?id=1 OR 1=1">/api/items?id=1 OR 1=1</a></li>
+      <li><span class="cat sqli">union</span> <a href="/api/items?id=1 UNION SELECT 1,username,password FROM users">/api/items?id=1 UNION SELECT...</a></li>
+      <li><span class="cat sqli">quote</span> <a href="/api/users?username=admin' OR '1'='1">/api/users?username=admin' OR '1'='1</a></li>
+      <li><span class="cat sqli">comment</span> <a href="/api/login?user=admin'--&pwd=x">/api/login?user=admin'--</a></li>
+      <li><span class="cat sqli">order</span> <a href="/api/comments?post_id=1&order=id;DROP TABLE users">/api/comments?order=id;DROP TABLE</a></li>
+      <li><span class="cat sqli">encoded</span> <a href="/api/items?id=1%20OR%201%3D1">/api/items?id=1%20OR%201%3D1</a></li>
+      <li><span class="cat sqli">case</span> <a href="/api/items?id=1 oR 1=1">/api/items?id=1 oR 1=1 (mixed case)</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Path Traversal</h2>
+    <ul>
+      <li><span class="cat trav">basic</span> <a href="/api/files?path=../app/main.py">/api/files?path=../app/main.py</a></li>
+      <li><span class="cat trav">etc</span> <a href="/api/files?path=../../../etc/passwd">/api/files?path=../../../etc/passwd</a></li>
+      <li><span class="cat trav">encoded</span> <a href="/api/files?path=%2e%2e%2fapp%2fmain.py">/api/files?path=%2e%2e%2f (encoded)</a></li>
+      <li><span class="cat trav">double</span> <a href="/api/files?path=....//....//etc/passwd">/api/files?path=....//....// (bypass)</a></li>
+      <li><span class="cat trav">download</span> <a href="/api/download?file=../../../etc/passwd">/api/download?file=../../../etc/passwd</a></li>
+      <li><span class="cat trav">include</span> <a href="/api/include?page=../../../etc/passwd">/api/include?page=../../../etc/passwd</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Other</h2>
+    <ul>
+      <li><span class="cat">eval</span> <a href="/api/eval?expr=__import__('os').popen('id').read()">/api/eval?expr=__import__('os')...</a></li>
+      <li><span class="cat">decode</span> <a href="/api/decode?data=PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==&encoding=base64">/api/decode (base64 XSS)</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Search Form</h2>
+    <form action="/search" method="get" style="display:flex;gap:10px">
+      <input name="q" type="text" placeholder="try: <script>alert(1)</script>" style="flex:1;padding:10px;border-radius:4px;border:none">
+      <button type="submit" style="padding:10px 20px;background:#4ecdc4;border:none;border-radius:4px;cursor:pointer">Search</button>
+    </form>
+  </div>
+</body>
+</html>

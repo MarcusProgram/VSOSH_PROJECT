@@ -4,11 +4,6 @@ from typing import List, Tuple
 
 
 def build_dataset() -> Tuple[List[str], List[str]]:
-    """
-    Синтетический датасет для обучения ML классификатора WAF.
-    Содержит примеры нормальных запросов и 5 типов атак:
-    SQLI, XSS, TRAVERSAL, CMD, SSRF
-    """
     
     # Нормальные запросы
     benign = [
